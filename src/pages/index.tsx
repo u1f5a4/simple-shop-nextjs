@@ -1,46 +1,70 @@
-import Head from "next/head";
-import Link from "next/link";
+import Head from 'next/head'
+import Link from 'next/link'
+import Image from 'next/image'
+import { useState } from 'react'
 
-import { Layout } from "components/templates";
-import { Date } from "components/atoms";
-import { getSortedPostsData } from "lib/posts";
+import { getPaintingsData } from 'lib/paintings'
+import Checkbox from 'components/molecules/Checkbox'
+import Layout from 'components/templates/Layout'
 
-import { globalData } from "globalData";
+export default function Home({ allPaintingsData }) {
+  const [paintings, setPaintings] = useState(allPaintingsData)
+  const filter = (artist: string) =>
+    setPaintings(
+      paintings.concat(
+        allPaintingsData.filter((paint) => paint.artist === artist)
+      )
+    )
+  const remove = (artist: string) =>
+    setPaintings(paintings.filter((paint) => paint.artist !== artist))
 
-export default function Home({ allPostsData }) {
   return (
     <Layout home={true}>
       <Head>
-        <title className="">{globalData.siteTitle}</title>
+        <title className="">simple-shop-nextjs</title>
       </Head>
 
-      <section>
-        <p className="text-center">[Your Self Introduction]</p>
-      </section>
+      <div className="mb-4 flex gap-4">
+        <Checkbox
+          label="Salvador Dalí"
+          init={true}
+          onTrue={() => filter('Salvador Dalí')}
+          onFalse={() => remove('Salvador Dalí')}
+        />
 
-      <section className="py-12 flex flex-col justify-center">
-        <h2 className="pb-3">Blog</h2>
-        <ul className="flex flex-col gap-3">
-          {allPostsData.map(({ id, date, title }) => (
-            <li className="" key={id}>
-              <Link href={`/posts/${id}`}>{title}</Link>
-              <br />
-              <small className="">
-                <Date dateString={date} />
-              </small>
-            </li>
-          ))}
-        </ul>
+        <Checkbox
+          label="Vincent van Gogh"
+          init={true}
+          onTrue={() => filter('Vincent van Gogh')}
+          onFalse={() => remove('Vincent van Gogh')}
+        />
+      </div>
+
+      <section className="columns-2 gap-3 md:columns-3">
+        {paintings.map(({ id, name, artist, year, image }) => (
+          <Link className="mb-3 block" key={id} href={`/paintings/${id}`}>
+            <Image
+              className="w-full"
+              src={image.src}
+              alt={name}
+              height={image.height}
+              width={image.width}
+              blurDataURL={image.base64}
+              placeholder="blur"
+              sizes="(max-width: 768px) 50vw,
+                     33vw"
+            />
+          </Link>
+        ))}
       </section>
     </Layout>
-  );
+  )
 }
-
 export async function getStaticProps() {
-  const allPostsData = getSortedPostsData();
+  const allPaintingsData = await getPaintingsData()
   return {
     props: {
-      allPostsData,
+      allPaintingsData,
     },
-  };
+  }
 }
