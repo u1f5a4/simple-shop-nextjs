@@ -6,38 +6,26 @@ import { remark } from 'remark'
 import html from 'remark-html'
 import { getPlaiceholder } from 'plaiceholder'
 
-type MatterData = {
-  artist: string
-  name: string
-  year: string
-  image: string
-}
+import { Painting, PaintingImage, MatterData } from 'lib/paintings.type'
 
 const paintingsDirectory = path.join(process.cwd(), 'paintings')
+const paintingsImageDirectory = path.join(process.cwd(), 'public', 'paintings')
 
-export async function getPaintingsData() {
+export type GetPaintingsData = (Omit<Painting, 'contentHtml'> & PaintingImage)[]
+export async function getPaintingsData(): Promise<GetPaintingsData> {
   // Get file names under /posts
   const fileNames = fs.readdirSync(paintingsDirectory)
-  const allPaintingsData = Promise.all(
+  return Promise.all(
     fileNames.map(async (fileName) => {
-      // Remove ".md" from file name to get id
       const id = fileName.replace(/\.md$/, '')
 
-      // Read markdown file as string
       const fullPath = path.join(paintingsDirectory, fileName)
-      const fileContents = fs.readFileSync(fullPath, 'utf8')
 
-      // Use gray-matter to parse the post metadata section
+      const fileContents = fs.readFileSync(fullPath, 'utf8')
       const matterResult = matter(fileContents)
 
-      // image
-      const imageMD = matterResult.data.image
-      const imagePath = path.join(process.cwd(), 'public', 'paintings', imageMD)
-      const imageFile = await readFile(imagePath)
-      const { base64, img } = await getPlaiceholder(imageFile, { size: 10 })
-      const image = { ...img, src: `/paintings/${imageMD}`, base64 }
+      const image = await getImageData(matterResult.data.image)
 
-      // Combine the data with the id
       return {
         id,
         ...(matterResult.data as MatterData),
@@ -45,8 +33,6 @@ export async function getPaintingsData() {
       }
     })
   )
-
-  return allPaintingsData
 }
 
 export function getAllPaintingPaths() {
@@ -60,31 +46,33 @@ export function getAllPaintingPaths() {
   })
 }
 
-export async function getPaintingData(id) {
+export type GetPaintingData = Painting & PaintingImage
+export async function getPaintingData(id): Promise<GetPaintingData> {
   const fullPath = path.join(paintingsDirectory, `${id}.md`)
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
 
-  // Use gray-matter to parse the post metadata section
+  const fileContents = fs.readFileSync(fullPath, 'utf8')
   const matterResult = matter(fileContents)
 
-  // Use remark to convert markdown into HTML string
   const processedContent = await remark()
     .use(html)
     .process(matterResult.content)
   const contentHtml = processedContent.toString()
 
-  // image
-  const imageMD = matterResult.data.image
-  const imagePath = path.join(process.cwd(), 'public', 'paintings', imageMD)
-  const imageFile = await readFile(imagePath)
-  const { base64, img } = await getPlaiceholder(imageFile, { size: 10 })
-  const image = { ...img, src: `/paintings/${imageMD}`, base64 }
+  const image = await getImageData(matterResult.data.image)
 
-  // Combine the data with the id and contentHtml
   return {
     id,
     contentHtml,
     ...(matterResult.data as MatterData),
     image,
   }
+}
+
+async function getImageData(
+  imageMD: MatterData['image']
+): Promise<PaintingImage['image']> {
+  const imagePath = path.join(paintingsImageDirectory, imageMD)
+  const imageFile = await readFile(imagePath)
+  const { base64, img } = await getPlaiceholder(imageFile, { size: 10 })
+  return { ...img, src: `/paintings/${imageMD}`, base64 }
 }
