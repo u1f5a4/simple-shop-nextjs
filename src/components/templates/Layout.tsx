@@ -2,6 +2,9 @@ import { ReactNode } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 
+import Header from 'components/organisms/Header'
+import Footer from 'components/organisms/Footer'
+
 type Props = {
   children: ReactNode
   home?: boolean
@@ -11,7 +14,7 @@ export default function Layout({ children, home }: Props) {
   return (
     <div
       id="root"
-      className="container px-6 flex flex-col gap-y-6 mx-auto lg:max-w-screen-lg"
+      className="container mx-auto flex flex-col gap-y-6 px-6 lg:max-w-screen-lg"
     >
       <Head>
         <link rel="icon" href="/favicon.ico" />
@@ -19,13 +22,7 @@ export default function Layout({ children, home }: Props) {
         <meta name="og:title" content="simple-shop-nextjs" />
       </Head>
 
-      <header className="flex flex-col items-center gap-y-6 pt-6">
-        <h1>
-          <Link className="" href="/">
-            simple-shop-nextjs
-          </Link>
-        </h1>
-      </header>
+      <Header />
 
       <main className="flex-grow">{children}</main>
 
@@ -35,9 +32,7 @@ export default function Layout({ children, home }: Props) {
         </div>
       )}
 
-      <footer className="py-6">
-        <p className="text-xs text-slate-400 text-center">(c) 2022</p>
-      </footer>
+      <Footer />
     </div>
   )
 }
