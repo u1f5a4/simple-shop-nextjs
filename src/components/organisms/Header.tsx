@@ -10,6 +10,8 @@ export default function Header() {
           simple-shop-nextjs
         </Link>
       </h1>
+
+      <CartButton />
     </header>
   )
 }

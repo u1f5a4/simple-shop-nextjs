@@ -3,18 +3,20 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 
-import { getPaintingsData } from 'lib/paintings'
+import { GetPaintingsData, getPaintingsData } from 'lib/paintings'
 import Checkbox from 'components/molecules/Checkbox'
 import Layout from 'components/templates/Layout'
 
-export default function Home({ allPaintingsData }) {
-  const [paintings, setPaintings] = useState(allPaintingsData)
-  const filter = (artist: string) =>
+export default function Home(props: { allPaintingsData: GetPaintingsData }) {
+  const [paintings, setPaintings] = useState(props.allPaintingsData)
+
+  const add = (artist: string) =>
     setPaintings(
       paintings.concat(
-        allPaintingsData.filter((paint) => paint.artist === artist)
+        props.allPaintingsData.filter((paint) => paint.artist === artist)
       )
     )
+
   const remove = (artist: string) =>
     setPaintings(paintings.filter((paint) => paint.artist !== artist))
 
@@ -24,25 +26,25 @@ export default function Home({ allPaintingsData }) {
         <title className="">simple-shop-nextjs</title>
       </Head>
 
-      <div className="mb-4 flex gap-4">
+      <div className="mb-4 flex flex-wrap gap-4">
         <Checkbox
           label="Salvador Dalí"
           init={true}
-          onTrue={() => filter('Salvador Dalí')}
+          onTrue={() => add('Salvador Dalí')}
           onFalse={() => remove('Salvador Dalí')}
         />
 
         <Checkbox
           label="Vincent van Gogh"
           init={true}
-          onTrue={() => filter('Vincent van Gogh')}
+          onTrue={() => add('Vincent van Gogh')}
           onFalse={() => remove('Vincent van Gogh')}
         />
       </div>
 
       <section className="columns-2 gap-3 md:columns-3">
         {paintings.map(({ id, name, artist, year, image }) => (
-          <Link className="mb-3 block" key={id} href={`/paintings/${id}`}>
+          <Link className="mb-3 block" key={id} href={`/painting/${id}`}>
             <Image
               className="w-full"
               src={image.src}
@@ -60,6 +62,7 @@ export default function Home({ allPaintingsData }) {
     </Layout>
   )
 }
+
 export async function getStaticProps() {
   const allPaintingsData = await getPaintingsData()
   return {
